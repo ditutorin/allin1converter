@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JP Converter - All in One Converter</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+
+    <style>
+        /* Background Gambar Cakep dari Unsplash */
+        body {
+            background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Efek Glassmorphism dengan Hijau Opacity 80% */
+        .glass-panel {
+            background: rgba(16, 185, 129, 0.8); /* Hijau Emerald dengan 80% opacity */
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Glassmorphism untuk Tab non-aktif */
+        .glass-tab {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .glass-tab:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .glass-tab.active {
+            background: #ffffff;
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 antialiased">
+
+    <div class="w-full max-w-4xl glass-panel rounded-3xl shadow-2xl p-6 md:p-8 text-white">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-black tracking-wider text-orange-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3">
+                <i class="fa-solid fa-cube text-orange-500 animate-pulse"></i> JP CONVERTER
+            </h1>
+            <p class="text-emerald-100 text-sm md:text-base mt-2 font-medium drop-shadow-sm">Aplikasi All-in-One Konverter Praktis & Cepat</p>
+        </header>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+            <button onclick="switchTab('img-qr')" id="tab-img-qr" class="glass-tab active p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-image text-xl"></i> Gambar ke QR
+            </button>
+            <button onclick="switchTab('text-qr')" id="tab-text-qr" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-font text-xl"></i> Teks ke QR
+            </button>
+            <button onclick="switchTab('img-pdf')" id="tab-img-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-image text-xl"></i> Gambar ke PDF
+            </button>
+            <button onclick="switchTab('pdf-img')" id="tab-pdf-img" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-pdf text-xl"></i> PDF ke Gambar
+            </button>
+            <button onclick="switchTab('doc-pdf')" id="tab-doc-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-word text-xl"></i> DOC ke PDF
+            </button>
+            <button onclick="switchTab('pdf-doc')" id="tab-pdf-doc" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-lines text-xl"></i> PDF ke DOC
+            </button>
+        </div>
+
+        <main class="bg-black/20 rounded-2xl p-6 min-h-[300px] flex flex-col justify-center">
+            
+            <div id="panel-img-qr" class="tab-panel flex flex-col items-center gap-4">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-image mr-2"></i> Gambar ke QR Code (via URL)</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Unggah gambar untuk mendapatkan link online, lalu ubah link tersebut menjadi QR Code.</p>
+                <input type="file" id="input-img-qr" accept="image/*" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600">
+                <button onclick="convertImgToQr()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-qrcode"></i> Generate QR</button>
+                <div id="output-img-qr" class="bg-white p-4 rounded-xl hidden mt-2"></div>
+            </div>
+
+            <div id="panel-text-qr" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-font mr-2"></i> Teks / URL ke QR Code</h3>
+                <input type="text" id="input-text-qr" placeholder="Ketik teks atau tempel tautan URL di sini..." class="w-full max-w-md p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <button onclick="convertTextToQr()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-gear"></i> Buat QR Code</button>
+                <div id="output-text-qr" class="bg-white p-4 rounded-xl hidden mt-2"></div>
+            </div>
+
+            <div id="panel-img-pdf" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-image mr-2"></i> Gambar ke PDF</h3>
+                <input type="file" id="input-img-pdf" accept="image/*" multiple class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertImgToPdf()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh PDF</button>
+            </div>
+
+            <div id="panel-pdf-img" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-pdf mr-2"></i> PDF ke Gambar</h3>
+                <input type="file" id="input-pdf-img" accept="application/pdf" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertPdfToImg()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-images"></i> Ekstrak Halaman Jadi Gambar</button>
+                <div id="output-pdf-img" class="w-full flex flex-col items-center gap-4 mt-4"></div>
+            </div>
+
+            <div id="panel-doc-pdf" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-word mr-2"></i> Dokumen (.txt / .html) ke PDF</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Fitur ini mendukung file berbasis teks (.txt, .docx mentah, atau .html) untuk dijadikan layout PDF.</p>
+                <input type="file" id="input-doc-pdf" accept=".txt,.html" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertDocToPdf()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-import"></i> Konversi ke PDF</button>
+            </div>
+
+            <div id="panel-pdf-doc" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-lines mr-2"></i> PDF ke Dokumen Teks (.txt)</h3>
+                <input type="file" id="input-pdf-doc" accept="application/pdf" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertPdfToDoc()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-word"></i> Ekstrak Teks</button>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // Setup library PDF.js
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+        // Fungsi Ganti Tab Menu
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
+            document.querySelectorAll('.glass-tab').forEach(tab => tab.classList.remove('active'));
+            
+            document.getElementById(`panel-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+        }
+
+        // 1. Gambar ke QR Code (Simulasi via local object URL / Free API jika mau publik)
+        function convertImgToQr() {
+            const input = document.getElementById('input-img-qr');
+            const output = document.getElementById('output-img-qr');
+            output.innerHTML = "";
+
+            if (input.files && input.files[0]) {
+                // Untuk simulasi lokal mandiri tanpa server, kita jadikan blob URL data lokal
+                const fakeUrl = URL.createObjectURL(input.files[0]); 
+                output.classList.remove('hidden');
+                new QRCode(output, {
+                    text: fakeUrl,
+                    width: 180,
+                    height: 180
+                });
+                alert("QR Code berhasil dibuat dari referensi data gambar lokal!");
+            } else {
+                alert("Pilih file gambar terlebih dahulu!");
+            }
+        }
+
+        // 2. Teks ke QR Code
+        function convertTextToQr() {
+            const text = document.getElementById('input-text-qr').value;
+            const output = document.getElementById('output-text-qr');
+            output.innerHTML = "";
+
+            if (text.trim() !== "") {
+                output.classList.remove('hidden');
+                new QRCode(output, {
+                    text: text,
+                    width: 180,
+                    height: 180
+                });
+            } else {
+                alert("Silakan masukkan teks atau tautan terlebih dahulu!");
+            }
+        }
+
+        // 3. Gambar ke PDF
+        function convertImgToPdf() {
+            const input = document.getElementById('input-img-pdf');
+            if (!input.files.length) return alert("Pilih satu atau beberapa gambar!");
+
+            const container = document.createElement('div');
+            
+            let filesLoaded = 0;
+            for (let i = 0; i < input.files.length; i++) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.style.width = '100%';
+                    img.style.marginBottom = '20px';
+                    container.appendChild(img);
+                    
+                    filesLoaded++;
+                    if (filesLoaded === input.files.length) {
+                        html2pdf().from(container).save('JP_Converted_Images.pdf');
+                    }
+                }
+                reader.readAsDataURL(input.files[i]);
+            }
+        }
+
+        // 4. PDF ke Gambar
+        function convertPdfToImg() {
+            const input = document.getElementById('input-pdf-img');
+            const output = document.getElementById('output-pdf-img');
+            output.innerHTML = "";
+
+            if (!input.files[0]) return alert("Pilih file PDF terlebih dahulu!");
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const typedarray = new Uint8Array(e.target.result);
+                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+                        pdf.getPage(pageNum).then(page => {
+                            const scale = 1.5;
+                            const viewport = page.getViewport({ scale: scale });
+                            const canvas = document.createElement('canvas');
+                            const context = canvas.getContext('2d');
+                            canvas.height = viewport.height;
+                            canvas.width = viewport.width;
+
+                            const renderContext = {
+                                canvasContext: context,
+                                viewport: viewport
+                            };
+
+                            page.render(renderContext).promise.then(() => {
+                                const imgContainer = document.createElement('div');
+                                imgContainer.className = "bg-white p-2 rounded-lg flex flex-col items-center gap-2";
+                                
+                                const img = document.createElement('img');
+                                img.src = canvas.toDataURL();
+                                img.className = "max-w-xs md:max-w-md rounded shadow-md";
+
+                                const downloadBtn = document.createElement('a');
+                                downloadBtn.href = img.src;
+                                downloadBtn.download = `Halaman_${pageNum}.png`;
+                                downloadBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded font-bold";
+                                downloadBtn.innerText = `Unduh Halaman ${pageNum}`;
+
+                                imgContainer.appendChild(img);
+                                imgContainer.appendChild(downloadBtn);
+                                output.appendChild(imgContainer);
+                            });
+                        });
+                    }
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 5. DOC ke PDF
+        function convertDocToPdf() {
+            const input = document.getElementById('input-doc-pdf');
+            if (!input.files[0]) return alert("Pilih file teks atau html!");
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const element = document.createElement('pre');
+                element.style.padding = "40px";
+                element.style.whiteSpace = "pre-wrap";
+                element.style.fontSize = "14px";
+                element.innerText = e.target.result;
+
+                html2pdf().from(element).save('JP_Document_Converted.pdf');
+            };
+            reader.readAsText(input.files[0]);
+        }
+
+        // 6. PDF ke DOC (Ekstrak Teks Tulisan)
+        function convertPdfToDoc() {
+            const input = document.getElementById('input-pdf-doc');
+            if (!input.files[0]) return alert("Pilih file PDF!");
+
+            const file = input.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const typedarray = new Uint8Array(e.target.result);
+                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
+                    let maxPages = pdf.numPages;
+                    let countPromises = [];
+                    
+                    for (let j = 1; j <= maxPages; j++) {
+                        let page = pdf.getPage(j);
+                        countPromises.push(page.then(page => {
+                            return page.getTextContent().then(text => {
+                                return text.items.map(s => s.str).join(' ');
+                            });
+                        }));
+                    }
+
+                    Promise.all(countPromises).then(texts => {
+                        const fullText = texts.join('\n\n--- Halaman Baru ---\n\n');
+                        const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "JP_Hasil_Ekstrak_PDF.txt";
+                        link.click();
+                    });
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+    </script>
+</body>
+</html>
