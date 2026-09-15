@@ -9,43 +9,50 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.8.2/docx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
 
     <style>
-        /* Background Gambar Cakep dari Unsplash */
         body {
             background: url('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=1920&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-
-        /* Efek Glassmorphism dengan Hijau Opacity 80% */
         .glass-panel {
-            background: rgba(16, 185, 129, 0.8); /* Hijau Emerald dengan 80% opacity */
+            background: rgba(16, 185, 129, 0.8);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
-
-        /* Glassmorphism untuk Tab non-aktif */
         .glass-tab {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(4px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
         }
-        .glass-tab:hover {
-            background: rgba(255, 255, 255, 0.25);
+        .glass-tab:hover { background: rgba(255, 255, 255, 0.25); }
+        .glass-tab.active { background: #ffffff; color: #10b981; }
+
+        .status-box {
+            background: rgba(0,0,0,0.3);
+            border-left: 4px solid #f97316;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            margin-top: 8px;
+            width: 100%;
+            max-width: 28rem;
         }
-        .glass-tab.active {
-            background: #ffffff;
-            color: #10b981;
-        }
+        .status-box.success { border-left-color: #22c55e; }
+        .status-box.error { border-left-color: #ef4444; }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 antialiased">
 
-    <div class="w-full max-w-4xl glass-panel rounded-3xl shadow-2xl p-6 md:p-8 text-white">
-        
+    <div class="w-full max-w-5xl glass-panel rounded-3xl shadow-2xl p-6 md:p-8 text-white">
+
         <header class="text-center mb-8">
             <h1 class="text-4xl md:text-5xl font-black tracking-wider text-orange-500 drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)] flex items-center justify-center gap-3">
                 <i class="fa-solid fa-cube text-orange-500 animate-pulse"></i> JP CONVERTER
@@ -53,256 +60,719 @@
             <p class="text-emerald-100 text-sm md:text-base mt-2 font-medium drop-shadow-sm">Aplikasi All-in-One Konverter Praktis & Cepat</p>
         </header>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-            <button onclick="switchTab('img-qr')" id="tab-img-qr" class="glass-tab active p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-image text-xl"></i> Gambar ke QR
+        <!-- MENU TABS (12 menu) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-8">
+            <button onclick="switchTab('img-qr')" id="tab-img-qr" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-image text-lg"></i> Gambar ke QR
             </button>
-            <button onclick="switchTab('text-qr')" id="tab-text-qr" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-font text-xl"></i> Teks ke QR
+            <button onclick="switchTab('text-qr')" id="tab-text-qr" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-font text-lg"></i> Teks ke QR
             </button>
-            <button onclick="switchTab('img-pdf')" id="tab-img-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-file-image text-xl"></i> Gambar ke PDF
+            <button onclick="switchTab('qr-text')" id="tab-qr-text" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-qrcode text-lg"></i> QR ke Teks
             </button>
-            <button onclick="switchTab('pdf-img')" id="tab-pdf-img" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-file-pdf text-xl"></i> PDF ke Gambar
+            <button onclick="switchTab('text-barcode')" id="tab-text-barcode" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-barcode text-lg"></i> Teks ke Barcode
             </button>
-            <button onclick="switchTab('doc-pdf')" id="tab-doc-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-file-word text-xl"></i> DOC ke PDF
+            <button onclick="switchTab('barcode-text')" id="tab-barcode-text" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-magnifying-glass text-lg"></i> Barcode ke Teks
             </button>
-            <button onclick="switchTab('pdf-doc')" id="tab-pdf-doc" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-sm cursor-pointer shadow-sm">
-                <i class="fa-solid fa-file-lines text-xl"></i> PDF ke DOC
+            <button onclick="switchTab('img-pdf')" id="tab-img-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-image text-lg"></i> Gambar ke PDF
+            </button>
+            <button onclick="switchTab('pdf-img')" id="tab-pdf-img" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-pdf text-lg"></i> PDF ke Gambar
+            </button>
+            <button onclick="switchTab('doc-pdf')" id="tab-doc-pdf" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-word text-lg"></i> DOCX ke PDF
+            </button>
+            <button onclick="switchTab('pdf-doc')" id="tab-pdf-doc" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-lines text-lg"></i> PDF ke DOCX
+            </button>
+            <button onclick="switchTab('doc-img')" id="tab-doc-img" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-export text-lg"></i> DOCX ke Gambar
+            </button>
+            <button onclick="switchTab('img-doc')" id="tab-img-doc" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-file-import text-lg"></i> Gambar ke DOCX
+            </button>
+            <button onclick="switchTab('batch')" id="tab-batch" class="glass-tab p-3 rounded-xl font-semibold flex flex-col items-center gap-2 text-xs cursor-pointer shadow-sm">
+                <i class="fa-solid fa-layer-group text-lg"></i> Batch Convert
             </button>
         </div>
 
         <main class="bg-black/20 rounded-2xl p-6 min-h-[300px] flex flex-col justify-center">
-            
+
+            <!-- 1. GAMBAR KE QR -->
             <div id="panel-img-qr" class="tab-panel flex flex-col items-center gap-4">
-                <h3 class="text-xl font-bold"><i class="fa-solid fa-image mr-2"></i> Gambar ke QR Code (via URL)</h3>
-                <p class="text-xs text-emerald-100 text-center max-w-md">Unggah gambar untuk mendapatkan link online, lalu ubah link tersebut menjadi QR Code.</p>
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-image mr-2"></i> Gambar ke QR Code</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Unggah gambar, gambar akan dikonversi jadi data URL dan ditanam ke QR Code.</p>
                 <input type="file" id="input-img-qr" accept="image/*" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:mr-4 file:py-1 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-orange-500 file:text-white hover:file:bg-orange-600">
                 <button onclick="convertImgToQr()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-qrcode"></i> Generate QR</button>
                 <div id="output-img-qr" class="bg-white p-4 rounded-xl hidden mt-2"></div>
+                <div id="status-img-qr" class="status-box hidden"></div>
             </div>
 
+            <!-- 2. TEKS KE QR -->
             <div id="panel-text-qr" class="tab-panel flex flex-col items-center gap-4 hidden">
                 <h3 class="text-xl font-bold"><i class="fa-solid fa-font mr-2"></i> Teks / URL ke QR Code</h3>
-                <input type="text" id="input-text-qr" placeholder="Ketik teks atau tempel tautan URL di sini..." class="w-full max-w-md p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <input type="text" id="input-text-qr" placeholder="Ketik teks atau tempel URL..." class="w-full max-w-md p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
                 <button onclick="convertTextToQr()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-gear"></i> Buat QR Code</button>
                 <div id="output-text-qr" class="bg-white p-4 rounded-xl hidden mt-2"></div>
             </div>
 
-            <div id="panel-img-pdf" class="tab-panel flex flex-col items-center gap-4 hidden">
-                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-image mr-2"></i> Gambar ke PDF</h3>
-                <input type="file" id="input-img-pdf" accept="image/*" multiple class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
-                <button onclick="convertImgToPdf()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh PDF</button>
+            <!-- 3. QR KE TEKS -->
+            <div id="panel-qr-text" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-qrcode mr-2"></i> QR Code ke Teks</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Upload gambar QR Code, sistem akan membaca isinya.</p>
+                <input type="file" id="input-qr-text" accept="image/*" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="decodeQr()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-search"></i> Baca QR</button>
+                <div id="output-qr-text" class="bg-white text-black p-4 rounded-xl min-w-[200px] text-center hidden"></div>
             </div>
 
+            <!-- 4. TEKS KE BARCODE -->
+            <div id="panel-text-barcode" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-barcode mr-2"></i> Teks ke Barcode (CODE128)</h3>
+                <input type="text" id="input-barcode-text" placeholder="Ketik teks/angka..." class="w-full max-w-md p-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <button onclick="textToBarcode()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-gear"></i> Buat Barcode</button>
+                <div class="bg-white p-4 rounded-xl hidden" id="barcode-wrapper">
+                    <svg id="barcode-output"></svg>
+                </div>
+            </div>
+
+            <!-- 5. BARCODE KE TEKS -->
+            <div id="panel-barcode-text" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-magnifying-glass mr-2"></i> Barcode ke Teks</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Upload gambar barcode. Sistem coba baca pakai jsQR (Code128 terbatas). Untuk hasil terbaik, gunakan gambar jelas dan kontras tinggi.</p>
+                <input type="file" id="input-barcode-text" accept="image/*" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="decodeBarcode()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-search"></i> Baca Barcode</button>
+                <div id="output-barcode-text" class="bg-white text-black p-4 rounded-xl min-w-[200px] text-center hidden"></div>
+            </div>
+
+            <!-- 6. GAMBAR KE PDF -->
+            <div id="panel-img-pdf" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-image mr-2"></i> Gambar ke PDF</h3>
+                <p class="text-xs text-emerald-100">Bisa pilih banyak gambar sekaligus, tiap gambar jadi 1 halaman PDF.</p>
+                <input type="file" id="input-img-pdf" accept="image/*" multiple class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertImgToPdf()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-pdf"></i> Unduh PDF</button>
+                <div id="status-img-pdf" class="status-box hidden"></div>
+            </div>
+
+            <!-- 7. PDF KE GAMBAR -->
             <div id="panel-pdf-img" class="tab-panel flex flex-col items-center gap-4 hidden">
                 <h3 class="text-xl font-bold"><i class="fa-solid fa-file-pdf mr-2"></i> PDF ke Gambar</h3>
                 <input type="file" id="input-pdf-img" accept="application/pdf" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
-                <button onclick="convertPdfToImg()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-images"></i> Ekstrak Halaman Jadi Gambar</button>
+                <button onclick="convertPdfToImg()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-images"></i> Ekstrak Halaman</button>
+                <div id="status-pdf-img" class="status-box hidden"></div>
                 <div id="output-pdf-img" class="w-full flex flex-col items-center gap-4 mt-4"></div>
             </div>
 
+            <!-- 8. DOCX KE PDF -->
             <div id="panel-doc-pdf" class="tab-panel flex flex-col items-center gap-4 hidden">
-                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-word mr-2"></i> Dokumen (.txt / .html) ke PDF</h3>
-                <p class="text-xs text-emerald-100 text-center max-w-md">Fitur ini mendukung file berbasis teks (.txt, .docx mentah, atau .html) untuk dijadikan layout PDF.</p>
-                <input type="file" id="input-doc-pdf" accept=".txt,.html" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-word mr-2"></i> DOCX / TXT / HTML ke PDF</h3>
+                <input type="file" id="input-doc-pdf" accept=".txt,.html,.docx" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
                 <button onclick="convertDocToPdf()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-import"></i> Konversi ke PDF</button>
+                <div id="status-doc-pdf" class="status-box hidden"></div>
             </div>
 
+            <!-- 9. PDF KE DOCX -->
             <div id="panel-pdf-doc" class="tab-panel flex flex-col items-center gap-4 hidden">
-                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-lines mr-2"></i> PDF ke Dokumen Teks (.txt)</h3>
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-lines mr-2"></i> PDF ke DOCX (Asli Word)</h3>
                 <input type="file" id="input-pdf-doc" accept="application/pdf" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
-                <button onclick="convertPdfToDoc()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-word"></i> Ekstrak Teks</button>
+                <button onclick="convertPdfToDoc()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-word"></i> Ekstrak ke DOCX</button>
+                <div id="status-pdf-doc" class="status-box hidden"></div>
+            </div>
+
+            <!-- 10. DOCX KE GAMBAR -->
+            <div id="panel-doc-img" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-export mr-2"></i> DOCX ke Gambar</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">DOCX dirender ke PDF dulu, lalu tiap halaman diekstrak jadi PNG.</p>
+                <input type="file" id="input-doc-img" accept=".docx" class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertDocToImg()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-images"></i> Render ke Gambar</button>
+                <div id="status-doc-img" class="status-box hidden"></div>
+                <div id="output-doc-img" class="w-full flex flex-col items-center gap-4 mt-4"></div>
+            </div>
+
+            <!-- 11. GAMBAR KE DOCX -->
+            <div id="panel-img-doc" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-file-import mr-2"></i> Gambar ke DOCX</h3>
+                <p class="text-xs text-emerald-100">Tiap gambar dimasukkan ke halaman Word baru.</p>
+                <input type="file" id="input-img-doc" accept="image/*" multiple class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="convertImgToDoc()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-file-word"></i> Buat DOCX</button>
+                <div id="status-img-doc" class="status-box hidden"></div>
+            </div>
+
+            <!-- 12. BATCH CONVERT -->
+            <div id="panel-batch" class="tab-panel flex flex-col items-center gap-4 hidden">
+                <h3 class="text-xl font-bold"><i class="fa-solid fa-layer-group mr-2"></i> Batch Convert (Banyak File Sekaligus)</h3>
+                <p class="text-xs text-emerald-100 text-center max-w-md">Pilih jenis konversi, lalu upload banyak file. Semua file akan diproses dan diunduh otomatis satu per satu.</p>
+                <select id="batch-type" class="w-full max-w-md p-3 rounded-lg bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+                    <option value="img-pdf" class="text-black">Gambar → PDF (gabung jadi 1 PDF)</option>
+                    <option value="pdf-img" class="text-black">PDF → Gambar (tiap halaman jadi PNG)</option>
+                    <option value="doc-pdf" class="text-black">DOCX/TXT → PDF</option>
+                    <option value="pdf-doc" class="text-black">PDF → DOCX</option>
+                    <option value="img-doc" class="text-black">Gambar → DOCX (gabung jadi 1 DOCX)</option>
+                </select>
+                <input type="file" id="input-batch" multiple class="w-full max-w-md bg-white/10 p-2 rounded-lg border border-white/20 file:bg-orange-500 file:text-white file:border-0 file:px-4 file:py-1 file:rounded-md">
+                <button onclick="runBatch()" class="bg-orange-500 hover:bg-orange-600 px-6 py-2 rounded-lg font-bold shadow-md cursor-pointer transition flex items-center gap-2"><i class="fa-solid fa-play"></i> Jalankan Batch</button>
+                <div id="status-batch" class="status-box hidden"></div>
             </div>
 
         </main>
     </div>
 
     <script>
-        // Setup library PDF.js
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
 
-        // Fungsi Ganti Tab Menu
+        // ====== UTIL ======
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.add('hidden'));
-            document.querySelectorAll('.glass-tab').forEach(tab => tab.classList.remove('active'));
-            
+            document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.glass-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`panel-${tabId}`).classList.remove('hidden');
             document.getElementById(`tab-${tabId}`).classList.add('active');
         }
 
-        // 1. Gambar ke QR Code (Simulasi via local object URL / Free API jika mau publik)
-        function convertImgToQr() {
+        function setStatus(id, msg, type = '') {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.innerText = msg;
+            el.className = 'status-box ' + type;
+            el.classList.remove('hidden');
+        }
+
+        function downloadBlob(blob, filename) {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+        }
+
+        function fileToDataURL(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.onerror = rej;
+                r.readAsDataURL(file);
+            });
+        }
+
+        function fileToArrayBuffer(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.onerror = rej;
+                r.readAsArrayBuffer(file);
+            });
+        }
+
+        function fileToText(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = e => res(e.target.result);
+                r.onerror = rej;
+                r.readAsText(file);
+            });
+        }
+
+        // Konversi canvas jadi blob PNG
+        function canvasToBlob(canvas) {
+            return new Promise(res => canvas.toBlob(res, 'image/png'));
+        }
+
+        // Render PDF ke array canvas (Promise)
+        async function renderPdfPages(arrayBuffer, scale = 1.5) {
+            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const pages = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const viewport = page.getViewport({ scale });
+                const canvas = document.createElement('canvas');
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+                const ctx = canvas.getContext('2d');
+                await page.render({ canvasContext: ctx, viewport }).promise;
+                pages.push(canvas);
+            }
+            return pages;
+        }
+
+        // Buat DOCX dari list gambar dataURL
+        async function buildDocxFromImages(dataUrls) {
+            const { Document, Packer, Paragraph, ImageRun, PageBreak } = docx;
+            const children = [];
+
+            for (let i = 0; i < dataUrls.length; i++) {
+                const dataUrl = dataUrls[i];
+                const base64 = dataUrl.split(',')[1];
+                const binary = atob(base64);
+                const bytes = new Uint8Array(binary.length);
+                for (let j = 0; j < binary.length; j++) bytes[j] = binary.charCodeAt(j);
+
+                // Ukuran default: 500xAuto (docx perlu dimensi eksplisit)
+                const dim = await new Promise(res => {
+                    const img = new Image();
+                    img.onload = () => res({ w: img.width, h: img.height });
+                    img.src = dataUrl;
+                });
+                const maxW = 500;
+                const ratio = dim.h / dim.w;
+                const w = Math.min(maxW, dim.w);
+                const h = Math.round(w * ratio);
+
+                children.push(new Paragraph({
+                    children: [new ImageRun({
+                        data: bytes,
+                        transformation: { width: w, height: h }
+                    })]
+                }));
+
+                if (i < dataUrls.length - 1) {
+                    children.push(new Paragraph({ children: [new PageBreak()] }));
+                }
+            }
+
+            const doc = new Document({ sections: [{ children }] });
+            return await Packer.toBlob(doc);
+        }
+
+        // ====== 1. GAMBAR KE QR ======
+        async function convertImgToQr() {
             const input = document.getElementById('input-img-qr');
             const output = document.getElementById('output-img-qr');
-            output.innerHTML = "";
+            output.innerHTML = '';
+            output.classList.add('hidden');
+            setStatus('status-img-qr', 'Memproses...');
 
-            if (input.files && input.files[0]) {
-                // Untuk simulasi lokal mandiri tanpa server, kita jadikan blob URL data lokal
-                const fakeUrl = URL.createObjectURL(input.files[0]); 
+            if (!input.files[0]) return setStatus('status-img-qr', 'Pilih gambar dulu!', 'error');
+
+            try {
+                const file = input.files[0];
+                // Kompres dulu supaya QR tidak overload (maks ~2KB lebih aman)
+                const dataUrl = await compressImage(file, 300);
                 output.classList.remove('hidden');
                 new QRCode(output, {
-                    text: fakeUrl,
-                    width: 180,
-                    height: 180
+                    text: dataUrl,
+                    width: 220,
+                    height: 220,
+                    correctLevel: QRCode.CorrectLevel.L
                 });
-                alert("QR Code berhasil dibuat dari referensi data gambar lokal!");
-            } else {
-                alert("Pilih file gambar terlebih dahulu!");
+                setStatus('status-img-qr', 'QR berhasil dibuat. Scan untuk melihat gambar (resolusi kecil).', 'success');
+            } catch (e) {
+                setStatus('status-img-qr', 'Gagal: ' + e.message, 'error');
             }
         }
 
-        // 2. Teks ke QR Code
+        function compressImage(file, maxSize) {
+            return new Promise((res, rej) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let { width: w, height: h } = img;
+                        if (w > h) { if (w > maxSize) { h = h * maxSize / w; w = maxSize; } }
+                        else { if (h > maxSize) { w = w * maxSize / h; h = maxSize; } }
+                        canvas.width = w; canvas.height = h;
+                        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                        res(canvas.toDataURL('image/jpeg', 0.6));
+                    };
+                    img.onerror = rej;
+                    img.src = e.target.result;
+                };
+                reader.onerror = rej;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ====== 2. TEKS KE QR ======
         function convertTextToQr() {
             const text = document.getElementById('input-text-qr').value;
             const output = document.getElementById('output-text-qr');
-            output.innerHTML = "";
+            output.innerHTML = '';
+            if (!text.trim()) return alert('Masukkan teks dulu!');
+            output.classList.remove('hidden');
+            new QRCode(output, { text, width: 220, height: 220 });
+        }
 
-            if (text.trim() !== "") {
-                output.classList.remove('hidden');
-                new QRCode(output, {
-                    text: text,
-                    width: 180,
-                    height: 180
-                });
-            } else {
-                alert("Silakan masukkan teks atau tautan terlebih dahulu!");
+        // ====== 3. QR KE TEKS ======
+        function decodeQr() {
+            const input = document.getElementById('input-qr-text');
+            const output = document.getElementById('output-qr-text');
+            output.classList.add('hidden');
+            if (!input.files[0]) return alert('Pilih gambar QR!');
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    output.classList.remove('hidden');
+                    output.innerText = code ? code.data : 'QR tidak terdeteksi.';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        // ====== 4. TEKS KE BARCODE ======
+        function textToBarcode() {
+            const text = document.getElementById('input-barcode-text').value;
+            const wrapper = document.getElementById('barcode-wrapper');
+            const svg = document.getElementById('barcode-output');
+            if (!text.trim()) return alert('Isi teks dulu!');
+            try {
+                JsBarcode(svg, text, { format: 'CODE128', displayValue: true, width: 2, height: 80 });
+                wrapper.classList.remove('hidden');
+            } catch (e) {
+                alert('Gagal: ' + e.message);
             }
         }
 
-        // 3. Gambar ke PDF
-        function convertImgToPdf() {
+        // ====== 5. BARCODE KE TEKS ======
+        function decodeBarcode() {
+            const input = document.getElementById('input-barcode-text');
+            const output = document.getElementById('output-barcode-text');
+            output.classList.add('hidden');
+            if (!input.files[0]) return alert('Pilih gambar barcode!');
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    // jsQR bisa baca QR, untuk barcode 1D butuh ZXing. Kita coba jsQR dulu.
+                    const code = jsQR(imageData.data, canvas.width, canvas.height);
+                    output.classList.remove('hidden');
+                    output.innerText = code
+                        ? code.data
+                        : 'Tidak terdeteksi. Catatan: jsQR hanya untuk QR Code. Untuk barcode 1D (Code128/EAN) butuh library ZXing (belum disertakan).';
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+
+        // ====== 6. GAMBAR KE PDF ======
+        async function convertImgToPdf() {
             const input = document.getElementById('input-img-pdf');
-            if (!input.files.length) return alert("Pilih satu atau beberapa gambar!");
+            if (!input.files.length) return setStatus('status-img-pdf', 'Pilih gambar dulu!', 'error');
+            setStatus('status-img-pdf', 'Memproses ' + input.files.length + ' gambar...');
 
-            const container = document.createElement('div');
-            
-            let filesLoaded = 0;
-            for (let i = 0; i < input.files.length; i++) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
+            try {
+                const container = document.createElement('div');
+                container.style.width = '210mm';
+                for (const file of input.files) {
+                    const dataUrl = await fileToDataURL(file);
                     const img = document.createElement('img');
-                    img.src = e.target.result;
+                    img.src = dataUrl;
                     img.style.width = '100%';
-                    img.style.marginBottom = '20px';
+                    img.style.display = 'block';
+                    img.style.pageBreakAfter = 'always';
                     container.appendChild(img);
-                    
-                    filesLoaded++;
-                    if (filesLoaded === input.files.length) {
-                        html2pdf().from(container).save('JP_Converted_Images.pdf');
-                    }
                 }
-                reader.readAsDataURL(input.files[i]);
+                await html2pdf().set({
+                    margin: 0,
+                    filename: 'JP_Gambar_ke_PDF.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(container).save();
+                setStatus('status-img-pdf', 'PDF berhasil diunduh!', 'success');
+            } catch (e) {
+                setStatus('status-img-pdf', 'Gagal: ' + e.message, 'error');
             }
         }
 
-        // 4. PDF ke Gambar
-        function convertPdfToImg() {
+        // ====== 7. PDF KE GAMBAR ======
+        async function convertPdfToImg() {
             const input = document.getElementById('input-pdf-img');
             const output = document.getElementById('output-pdf-img');
-            output.innerHTML = "";
+            output.innerHTML = '';
+            if (!input.files[0]) return setStatus('status-pdf-img', 'Pilih PDF dulu!', 'error');
+            setStatus('status-pdf-img', 'Merender halaman...');
 
-            if (!input.files[0]) return alert("Pilih file PDF terlebih dahulu!");
+            try {
+                const buf = await fileToArrayBuffer(input.files[0]);
+                const pages = await renderPdfPages(buf, 1.5);
+                for (let i = 0; i < pages.length; i++) {
+                    const blob = await canvasToBlob(pages[i]);
+                    const url = URL.createObjectURL(blob);
 
-            const file = input.files[0];
-            const reader = new FileReader();
+                    const wrap = document.createElement('div');
+                    wrap.className = 'bg-white p-2 rounded-lg flex flex-col items-center gap-2';
 
-            reader.onload = function(e) {
-                const typedarray = new Uint8Array(e.target.result);
-                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-                    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-                        pdf.getPage(pageNum).then(page => {
-                            const scale = 1.5;
-                            const viewport = page.getViewport({ scale: scale });
-                            const canvas = document.createElement('canvas');
-                            const context = canvas.getContext('2d');
-                            canvas.height = viewport.height;
-                            canvas.width = viewport.width;
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.className = 'max-w-xs md:max-w-md rounded shadow-md';
 
-                            const renderContext = {
-                                canvasContext: context,
-                                viewport: viewport
-                            };
+                    const btn = document.createElement('a');
+                    btn.href = url;
+                    btn.download = `JP_Halaman_${i + 1}.png`;
+                    btn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded font-bold cursor-pointer';
+                    btn.innerText = `Unduh Halaman ${i + 1}`;
 
-                            page.render(renderContext).promise.then(() => {
-                                const imgContainer = document.createElement('div');
-                                imgContainer.className = "bg-white p-2 rounded-lg flex flex-col items-center gap-2";
-                                
-                                const img = document.createElement('img');
-                                img.src = canvas.toDataURL();
-                                img.className = "max-w-xs md:max-w-md rounded shadow-md";
-
-                                const downloadBtn = document.createElement('a');
-                                downloadBtn.href = img.src;
-                                downloadBtn.download = `Halaman_${pageNum}.png`;
-                                downloadBtn.className = "bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1 rounded font-bold";
-                                downloadBtn.innerText = `Unduh Halaman ${pageNum}`;
-
-                                imgContainer.appendChild(img);
-                                imgContainer.appendChild(downloadBtn);
-                                output.appendChild(imgContainer);
-                            });
-                        });
-                    }
-                });
-            };
-            reader.readAsArrayBuffer(file);
+                    wrap.appendChild(img);
+                    wrap.appendChild(btn);
+                    output.appendChild(wrap);
+                }
+                setStatus('status-pdf-img', `Selesai! ${pages.length} halaman dirender.`, 'success');
+            } catch (e) {
+                setStatus('status-pdf-img', 'Gagal: ' + e.message, 'error');
+            }
         }
 
-        // 5. DOC ke PDF
-        function convertDocToPdf() {
+        // ====== 8. DOCX / TXT / HTML KE PDF ======
+        async function convertDocToPdf() {
             const input = document.getElementById('input-doc-pdf');
-            if (!input.files[0]) return alert("Pilih file teks atau html!");
+            if (!input.files[0]) return setStatus('status-doc-pdf', 'Pilih file dulu!', 'error');
+            setStatus('status-doc-pdf', 'Memproses...');
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const element = document.createElement('pre');
-                element.style.padding = "40px";
-                element.style.whiteSpace = "pre-wrap";
-                element.style.fontSize = "14px";
-                element.innerText = e.target.result;
+            try {
+                const file = input.files[0];
+                const ext = file.name.split('.').pop().toLowerCase();
+                let html = '';
 
-                html2pdf().from(element).save('JP_Document_Converted.pdf');
-            };
-            reader.readAsText(input.files[0]);
+                if (ext === 'docx') {
+                    const buf = await fileToArrayBuffer(file);
+                    const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+                    html = result.value || '<p>(Kosong)</p>';
+                } else if (ext === 'html' || ext === 'htm') {
+                    html = await fileToText(file);
+                } else {
+                    const txt = await fileToText(file);
+                    html = '<pre style="white-space:pre-wrap;font-family:Arial;">' +
+                           txt.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>';
+                }
+
+                const element = document.createElement('div');
+                element.style.padding = '40px';
+                element.style.fontFamily = 'Arial, sans-serif';
+                element.style.fontSize = '13px';
+                element.style.lineHeight = '1.5';
+                element.innerHTML = html;
+
+                await html2pdf().set({
+                    margin: 10,
+                    filename: 'JP_Dokumen_ke_PDF.pdf',
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).save();
+
+                setStatus('status-doc-pdf', 'PDF berhasil diunduh!', 'success');
+            } catch (e) {
+                setStatus('status-doc-pdf', 'Gagal: ' + e.message, 'error');
+            }
         }
 
-        // 6. PDF ke DOC (Ekstrak Teks Tulisan)
-        function convertPdfToDoc() {
+        // ====== 9. PDF KE DOCX ======
+        async function convertPdfToDoc() {
             const input = document.getElementById('input-pdf-doc');
-            if (!input.files[0]) return alert("Pilih file PDF!");
+            if (!input.files[0]) return setStatus('status-pdf-doc', 'Pilih PDF dulu!', 'error');
+            setStatus('status-pdf-doc', 'Mengekstrak teks...');
 
-            const file = input.files[0];
-            const reader = new FileReader();
+            try {
+                const buf = await fileToArrayBuffer(input.files[0]);
+                const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
 
-            reader.onload = function(e) {
-                const typedarray = new Uint8Array(e.target.result);
-                pdfjsLib.getDocument(typedarray).promise.then(pdf => {
-                    let maxPages = pdf.numPages;
-                    let countPromises = [];
-                    
-                    for (let j = 1; j <= maxPages; j++) {
-                        let page = pdf.getPage(j);
-                        countPromises.push(page.then(page => {
-                            return page.getTextContent().then(text => {
-                                return text.items.map(s => s.str).join(' ');
-                            });
-                        }));
-                    }
+                const { Document, Packer, Paragraph, TextRun } = docx;
+                const paragraphs = [];
 
-                    Promise.all(countPromises).then(texts => {
-                        const fullText = texts.join('\n\n--- Halaman Baru ---\n\n');
-                        const blob = new Blob([fullText], { type: "text/plain;charset=utf-8" });
-                        const link = document.createElement('a');
-                        link.href = URL.createObjectURL(blob);
-                        link.download = "JP_Hasil_Ekstrak_PDF.txt";
-                        link.click();
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const content = await page.getTextContent();
+                    const text = content.items.map(it => it.str).join(' ');
+
+                    paragraphs.push(new Paragraph({
+                        children: [new TextRun({ text: `--- Halaman ${i} ---`, bold: true, color: '10b981' })]
+                    }));
+                    paragraphs.push(new Paragraph({ text: text || '(tidak ada teks)' }));
+                    paragraphs.push(new Paragraph({ text: '' }));
+                }
+
+                const doc = new Document({ sections: [{ children: paragraphs }] });
+                const blob = await Packer.toBlob(doc);
+                downloadBlob(blob, 'JP_Hasil_Ekstrak_PDF.docx');
+                setStatus('status-pdf-doc', 'DOCX berhasil diunduh!', 'success');
+            } catch (e) {
+                setStatus('status-pdf-doc', 'Gagal: ' + e.message, 'error');
+            }
+        }
+
+        // ====== 10. DOCX KE GAMBAR ======
+        async function convertDocToImg() {
+            const input = document.getElementById('input-doc-img');
+            const output = document.getElementById('output-doc-img');
+            output.innerHTML = '';
+            if (!input.files[0]) return setStatus('status-doc-img', 'Pilih DOCX dulu!', 'error');
+            setStatus('status-doc-img', 'Render DOCX → PDF → Gambar...');
+
+            try {
+                const file = input.files[0];
+                const buf = await fileToArrayBuffer(file);
+                const result = await mammoth.convertToHtml({ arrayBuffer: buf });
+
+                const element = document.createElement('div');
+                element.style.padding = '40px';
+                element.style.fontFamily = 'Arial, sans-serif';
+                element.style.fontSize = '13px';
+                element.innerHTML = result.value || '<p>(Kosong)</p>';
+
+                // DOCX -> PDF blob
+                const pdfBlob = await html2pdf().set({
+                    margin: 10,
+                    html2canvas: { scale: 2 },
+                    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                }).from(element).outputPdf('blob');
+
+                // PDF -> gambar
+                const pdfBuf = await pdfBlob.arrayBuffer();
+                const pages = await renderPdfPages(pdfBuf, 1.5);
+
+                for (let i = 0; i < pages.length; i++) {
+                    const blob = await canvasToBlob(pages[i]);
+                    const url = URL.createObjectURL(blob);
+                    const wrap = document.createElement('div');
+                    wrap.className = 'bg-white p-2 rounded-lg flex flex-col items-center gap-2';
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.className = 'max-w-xs md:max-w-md rounded shadow-md';
+                    const btn = document.createElement('a');
+                    btn.href = url;
+                    btn.download = `JP_DOCX_Halaman_${i + 1}.png`;
+                    btn.className = 'bg-emerald-600 text-white text-xs px-3 py-1 rounded font-bold cursor-pointer';
+                    btn.innerText = `Unduh Halaman ${i + 1}`;
+                    wrap.appendChild(img);
+                    wrap.appendChild(btn);
+                    output.appendChild(wrap);
+                }
+                setStatus('status-doc-img', `Selesai! ${pages.length} halaman.`, 'success');
+            } catch (e) {
+                setStatus('status-doc-img', 'Gagal: ' + e.message, 'error');
+            }
+        }
+
+        // ====== 11. GAMBAR KE DOCX ======
+        async function convertImgToDoc() {
+            const input = document.getElementById('input-img-doc');
+            if (!input.files.length) return setStatus('status-img-doc', 'Pilih gambar dulu!', 'error');
+            setStatus('status-img-doc', 'Membuat DOCX...');
+
+            try {
+                const dataUrls = [];
+                for (const file of input.files) {
+                    dataUrls.push(await fileToDataURL(file));
+                }
+                const blob = await buildDocxFromImages(dataUrls);
+                downloadBlob(blob, 'JP_Gambar_ke_DOCX.docx');
+                setStatus('status-img-doc', 'DOCX berhasil diunduh!', 'success');
+            } catch (e) {
+                setStatus('status-img-doc', 'Gagal: ' + e.message, 'error');
+            }
+        }
+
+        // ====== 12. BATCH CONVERT ======
+        async function runBatch() {
+            const type = document.getElementById('batch-type').value;
+            const input = document.getElementById('input-batch');
+            if (!input.files.length) return setStatus('status-batch', 'Pilih file dulu!', 'error');
+
+            setStatus('status-batch', `Memproses ${input.files.length} file (${type})...`);
+            const files = Array.from(input.files);
+
+            try {
+                if (type === 'img-pdf') {
+                    const dataUrls = [];
+                    for (const f of files) dataUrls.push(await fileToDataURL(f));
+                    const container = document.createElement('div');
+                    container.style.width = '210mm';
+                    dataUrls.forEach(u => {
+                        const img = document.createElement('img');
+                        img.src = u; img.style.width = '100%';
+                        img.style.pageBreakAfter = 'always';
+                        container.appendChild(img);
                     });
-                });
-            };
-            reader.readAsArrayBuffer(file);
+                    await html2pdf().set({
+                        margin: 0, html2canvas: { scale: 2 },
+                        jsPDF: { unit: 'mm', format: 'a4' }
+                    }).from(container).save('JP_Batch_Images.pdf');
+                    setStatus('status-batch', 'Selesai! 1 PDF tergabung.', 'success');
+
+                } else if (type === 'pdf-img') {
+                    for (const f of files) {
+                        const buf = await fileToArrayBuffer(f);
+                        const pages = await renderPdfPages(buf, 1.5);
+                        for (let i = 0; i < pages.length; i++) {
+                            const blob = await canvasToBlob(pages[i]);
+                            downloadBlob(blob, `JP_${f.name.replace(/\.pdf$/i, '')}_hal${i + 1}.png`);
+                        }
+                    }
+                    setStatus('status-batch', `Selesai! ${files.length} PDF diproses.`, 'success');
+
+                } else if (type === 'doc-pdf') {
+                    for (const f of files) {
+                        const ext = f.name.split('.').pop().toLowerCase();
+                        let html = '';
+                        if (ext === 'docx') {
+                            const buf = await fileToArrayBuffer(f);
+                            const r = await mammoth.convertToHtml({ arrayBuffer: buf });
+                            html = r.value;
+                        } else {
+                            const txt = await fileToText(f);
+                            html = '<pre style="white-space:pre-wrap;font-family:Arial;">' +
+                                   txt.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</pre>';
+                        }
+                        const el = document.createElement('div');
+                        el.style.padding = '40px';
+                        el.style.fontFamily = 'Arial, sans-serif';
+                        el.innerHTML = html;
+                        await html2pdf().set({
+                            margin: 10, html2canvas: { scale: 2 },
+                            jsPDF: { unit: 'mm', format: 'a4' }
+                        }).from(el).save(`JP_${f.name.replace(/\.[^.]+$/, '')}.pdf`);
+                    }
+                    setStatus('status-batch', `Selesai! ${files.length} file diproses.`, 'success');
+
+                } else if (type === 'pdf-doc') {
+                    const { Document, Packer, Paragraph, TextRun } = docx;
+                    for (const f of files) {
+                        const buf = await fileToArrayBuffer(f);
+                        const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+                        const paragraphs = [];
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const c = await page.getTextContent();
+                            paragraphs.push(new Paragraph({ text: `--- Halaman ${i} ---`, heading: 'Heading2' }));
+                            paragraphs.push(new Paragraph({ text: c.items.map(it => it.str).join(' ') }));
+                        }
+                        const doc = new Document({ sections: [{ children: paragraphs }] });
+                        const blob = await Packer.toBlob(doc);
+                        downloadBlob(blob, `JP_${f.name.replace(/\.pdf$/i, '')}.docx`);
+                    }
+                    setStatus('status-batch', `Selesai! ${files.length} PDF diproses.`, 'success');
+
+                } else if (type === 'img-doc') {
+                    const dataUrls = [];
+                    for (const f of files) dataUrls.push(await fileToDataURL(f));
+                    const blob = await buildDocxFromImages(dataUrls);
+                    downloadBlob(blob, 'JP_Batch_Gambar.docx');
+                    setStatus('status-batch', 'Selesai! 1 DOCX tergabung.', 'success');
+                }
+            } catch (e) {
+                setStatus('status-batch', 'Gagal: ' + e.message, 'error');
+            }
         }
     </script>
 </body>
